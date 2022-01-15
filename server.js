@@ -3,10 +3,12 @@ var http = require("http");
 var lt = require("localtunnel");
 var fs = require("fs");
 var qs = require("querystring");
+var bp = require("body-parser");
 
 var html = fs.readFileSync("app.html", "utf-8");
 
-var ahk = spawn("C:/keyboarder.exe", ['ahk/stdin.ahk']);
+// var ahkKB = spawn("C:/keyboarder.exe", ['ahk/stdin.ahk']);
+var ahkMouse = spawn("C:/mouse_mover.exe", ["ahk/stdin.ahk"]);
 
 /*
 var dataString = '';
@@ -28,41 +30,49 @@ ahk.stdout.on('end', function(){
 // ahk.stdin.write('some example'+'\r\n');
 
 var currentModKeyisSpecial;
-var heldModifier0, heldModifier1;
+var heldModifier0, heldModifier1, keys = [], send = "";
+
+function keysHandler(keycode) {
+    if(keycode == "Shift" || keycode == "Alt" || keycode == "Ctrl") {
+        currentModKeyisSpecial = 1;
+        (async function() {
+            while(currentModKeyisSpecial) {
+                continue;
+            }
+
+        })();
+    }
+    if(!currentModKeyisSpecial) {
+        keys.forEach(element, index => {
+            if(keys.length == 1) {
+                send += element;
+                return;
+            }
+            send += element;
+            if(keys.length - 1 == index) {
+                return;
+            }
+            send += " + ";
+        });
+    }
+}
 
 var requestListener = function(req, res) {
     if(req.method == "GET") {
         res.writeHead(200);
         res.end(html);
     } else if(req.method == "POST") {
-        var body = "", keys = [], send = "";
+        var body = ""/*, keys = [], send = ""*/;
         req.on("data", function(data) {
             body += data;
         });
-        var post = qs.parse(body);
-        var keycode = post.kc;
-        var mouseMovement 
-        if(keycode == "Shift" || keycode == "Alt" || keycode == "Ctrl") {
-            currentModKeyisSpecial = 1;
-            (async function() {
-                while(currentModKeyisSpecial) {
-                    continue;
-                }
-
-            })();
-        }
-        if(!currentModKeyisSpecial) {
-            keys.forEach(element, index => {
-                if(keys.length == 1) {
-                    send += element;
-                    return;
-                }
-                send += element;
-                if(keys.length - 1 == index) {
-                    return;
-                }
-                send += " + ";
-            });
+        var mouseMovement = [body.x, body.y];
+        if(body.z) {
+            keysHandler(qs.kc);
+        } else {
+            console.log(body);
+            console.log(`${body.x},${body.y}`);
+            ahkMouse.stdin.write(`${body.x},${body.y}` + "\r\n");
         }
     }
 }

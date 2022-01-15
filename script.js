@@ -9,19 +9,30 @@ window.addEventListener('keydown', function(event) {
     xhr.send(params);
 });
 */
-var canvas = document.getElementbyID("canvas_elem").requestPointerLock();
+var xChange = 0, yChange = 0;
+var canvas = document.getElementById("canvas_elem");
 canvas.onclick = function () {
     canvas.requestPointerLock();
 }
 //canvas.requestPointerLock();
 document.addEventListener("pointerlockchange", pointerlockchanged, true);
 function pointerlockchanged() {
-    document.addEventListener("mousemove", updatePos, falsr);
+    document.addEventListener("mousemove", updatePos, false);
+    setInterval(sendPos, 20)
 }
 function updatePos(h) {
-    var xhr = new XMLHttpRequest();
-    var url = window.location.href;
-    var params = `x=${h.movementX}&y=${h.movementY}`;
-    xhr.send(params);
+    xChange += h.movementX;
+    yChange += h.movementY;
 }
 })();
+
+function sendPos() {
+    var tempx = xChange, tempy = yChange;
+    xChange = 0;
+    yChange = 0;
+    var xhr = new XMLHttpRequest();
+    var url = window.location.href;
+    var params = `x=${tempx}&y=${tempy}&z=0`;
+    xhr.open("POST", url, true);
+    xhr.send(params);
+}
